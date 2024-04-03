@@ -5,9 +5,6 @@ Viking App is a mobile application designed to optimize the work of computer rep
 
 This is the backend repo, if you want to see the frontend, go to:
 
-
-
-
 ## Technologies
 Technologies:
 
@@ -18,16 +15,15 @@ Technologies:
 
 1) Backend: The backend is developed in Java and uses Spring Boot as a framework. It is responsible for managing users, jobs, teams, budgets and communications.
 2) Database: The database used is MySQL, where all the application information is stored.
-3) Mobile App: The mobile app is developed in React Native and allows technicians and customers to interact with the app. Technicians can log jobs, update repair status, send photos and videos, and communicate with customers. Customers can track repair progress, view photos and videos, and access detailed estimates.
 
 ## Main Features
-1) User Registration: Technicians and customers can register on the app to access its features.
+1) Easy to use: Only with the ticket number, the clients can see the advance of thier equipment
 
 2) Job Management: Technicians can create and manage tickets for each repair, including customer, equipment, problem, and diagnosis information.
 
 3) Progress Tracking: Technicians can update job status with photos, videos and comments so the customer can follow the process in real time.
 
-4)Estimates: Technicians can generate detailed estimates with the total cost of the repair, including labor and parts.
+4) Estimates: Technicians can generate detailed estimates with the total cost of the repair, including labor and parts.
 
 5) Repair History: Customers can access a complete record of all repairs performed, including equipment, customer and cost information.
 
