@@ -31,27 +31,31 @@ public class DeviceResource {
             System.out.println("Query: " + query); // Imprimir la query recibida
     
             switch (query.toLowerCase()) {
-                case "all":
+                case "all" -> {
                     System.out.println("Searching all devices");
                     List<Device> devices = deviceService.getAll();
                     return ResponseEntity.ok(devices);
-                case "by-id":
+                }
+                case "by-id" -> {
                     if (id == null) {
                         return ResponseEntity.badRequest().body("ID is required for 'by-id' query");
                     }
                     System.out.println("Searching device by ID");
                     Device deviceById = deviceService.getDeviceById(id);
                     return ResponseEntity.ok(deviceById);
-                case "by-serial-number":
+                }
+                case "by-serial-number" -> {
                     if (serialNumber == null) {
                         return ResponseEntity.badRequest().body("Serial number is required for 'by-serial-number' query");
                     }
                     System.out.println("Searching device by Serial Number");
                     Device deviceBySerialNumber = deviceService.getDeviceBySerialNumber(serialNumber);
                     return ResponseEntity.ok(deviceBySerialNumber);
-                default:
+                }
+                default -> {
                     System.out.println("Invalid query parameter");
                     return ResponseEntity.badRequest().body("Invalid query parameter");
+                }
             }
         } catch (NoSuchElementException | NumberFormatException e) {
             System.out.println("Error processing request: " + e.getMessage());
