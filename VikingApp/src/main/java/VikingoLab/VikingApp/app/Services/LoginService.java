@@ -39,7 +39,7 @@ public class LoginService {
         if (client != null) {
             WorkOrder foundWorkOrder = workOrderRepository.findById(workOrder.getId())
                     .orElseThrow(() -> new NoSuchElementException("WorkOrder not found with id: " + workOrder.getId()));
-            if (foundWorkOrder.getClient().getDni() == client.getDni()) {
+            if (foundWorkOrder.getClient().getDni() == (client.getDni())) {
                 return client;
             }
         }
