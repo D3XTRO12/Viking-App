@@ -2,6 +2,7 @@ package VikingoLab.VikingApp.app.Services;
 
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,4 +35,38 @@ public class ClientService {
         System.out.println("Datos recibidos para guardar: " + client.toString());
         return clientRepo.save(client);
     }
+    public Client updateClient(Client existingClient, Client newClientDetails) throws Exception {
+        // Aquí puedes realizar la lógica para actualizar el cliente existente con los nuevos detalles
+        // Por ejemplo:
+        existingClient.setName(newClientDetails.getName());
+        existingClient.setAddress(newClientDetails.getAddress());
+        existingClient.setPhoneNumber(newClientDetails.getPhoneNumber());
+        existingClient.setSecondaryPhoneNumber(newClientDetails.getSecondaryPhoneNumber());
+    
+        // Guardar los cambios en la base de datos
+        // Esto dependerá de cómo esté configurada tu persistencia (JPA, Hibernate, etc.)
+        // Por ejemplo, usando JPA/Hibernate:
+        clientRepo.save(existingClient);
+    
+        return existingClient;
+    }
+    public boolean deleteClient(Long id) {
+        try {
+            // Buscar el cliente por id
+            Optional<Client> optionalClient = clientRepo.findById(id);
+            if (!optionalClient.isPresent()) {
+                return false; // Cliente no encontrado
+            }
+    
+            // Eliminar el cliente
+            clientRepo.deleteById(id);
+    
+            return true; // Cliente eliminado exitosamente
+        } catch (Exception e) {
+            // Manejar errores generales
+            return false; // Error al eliminar
+        }
+    }
+    
+    
 }
