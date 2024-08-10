@@ -1,15 +1,21 @@
 package VikingoLab.VikingApp.app.Models;
 
-import java.util.List;
-
-import jakarta.persistence.*;
-import lombok.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "clients")
-@Getter
 @Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -23,8 +29,9 @@ public class Client {
     @Column(name = "name")
     private String name;
 
+    // Cambiado a String y agregado la restricción UNIQUE
     @Column(name = "dni")
-    private int dni;
+    private int dni; // Asegúrate de cambiar el ipo de dato aquí
 
     @Column(name = "address")
     private String address;
@@ -35,9 +42,6 @@ public class Client {
     @Column(name = "secondary_phone_number")
     private String secondaryPhoneNumber;
 
-    @OneToMany(mappedBy = "client")
-    @JsonIgnore // Ignorar esta propiedad al serializar a JSON
-    private List<Device> devices;
 
     @Override
     public String toString() {
