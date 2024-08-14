@@ -31,7 +31,7 @@ public class Client {
 
     // Cambiado a String y agregado la restricción UNIQUE
     @Column(name = "dni")
-    private int dni; // Asegúrate de cambiar el ipo de dato aquí
+    private Integer dni; // Asegúrate de cambiar el ipo de dato aquí
 
     @Column(name = "address")
     private String address;
