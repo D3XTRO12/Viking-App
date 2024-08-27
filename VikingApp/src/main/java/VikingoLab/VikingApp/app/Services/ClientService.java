@@ -54,7 +54,7 @@ public class ClientService {
         try {
             // Buscar el cliente por id
             Optional<Client> optionalClient = clientRepo.findById(id);
-            if (!optionalClient.isPresent()) {
+            if (optionalClient.isEmpty()) {
                 return false; // Cliente no encontrado
             }
     
