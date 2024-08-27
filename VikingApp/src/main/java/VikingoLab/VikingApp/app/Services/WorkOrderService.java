@@ -3,7 +3,6 @@ package VikingoLab.VikingApp.app.Services;
 import java.util.List;
 import static java.util.Objects.requireNonNull;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import VikingoLab.VikingApp.app.Models.Client;
@@ -22,7 +21,7 @@ public class WorkOrderService {
     private final StaffRepo staffRepo;
     private final DeviceRepo deviceRepo;
 
-    @Autowired
+    //@Autowired
     public WorkOrderService(WorkOrderRepo workOrderRepo, ClientRepo clientRepo, StaffRepo staffRepo, DeviceRepo deviceRepo) {
         this.workOrderRepo = workOrderRepo;
         this.clientRepo = clientRepo;
