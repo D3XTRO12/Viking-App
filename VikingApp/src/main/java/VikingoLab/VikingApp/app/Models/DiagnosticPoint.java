@@ -1,9 +1,13 @@
 package VikingoLab.VikingApp.app.Models;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,16 +38,15 @@ public class DiagnosticPoint {
     private WorkOrder workOrder;
 
     @Column(name = "timestamp", nullable = false)
-    private LocalDateTime timestamp;
+    private Date timestamp;  // Cambiado a Date
 
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "photos")
-    private String photos;
-
-    @Column(name = "videos")
-    private String videos;
+    @ElementCollection(fetch = FetchType.EAGER) // Cambia a EAGER
+    @Column(name = "multimedia_files")
+    @Builder.Default
+    private List<String> multimediaFiles = new ArrayList<>();
 
     @Column(name = "notes")
     private String notes;
