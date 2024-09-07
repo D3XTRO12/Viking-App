@@ -142,3 +142,4 @@ Thumbs.db
 
 # Archivos de SonarQube
 **/sonar-project.properties
+src/main/resources/application.properties
