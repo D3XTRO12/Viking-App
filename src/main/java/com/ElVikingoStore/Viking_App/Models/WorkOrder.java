@@ -37,13 +37,13 @@ public class WorkOrder {
 
     // Relación con el cliente (end-user o company)
     @ManyToOne
-    @JoinColumn(name = "client_id", referencedColumnName = "dni", nullable = false)
-    private User client;  // Ahora es de tipo User para soportar tanto clientes finales como compañías
+    @JoinColumn(name = "client_dni", referencedColumnName = "dni", nullable = false)  // Cambiado a client_dni
+    private User client;
 
     // Relación con el staff que realiza la reparación
     @ManyToOne
-    @JoinColumn(name = "staff_id", referencedColumnName = "dni", nullable = false)
-    private User staff;  // Cambiado a User
+    @JoinColumn(name = "staff_dni", referencedColumnName = "dni", nullable = false)  // Cambiado a staff_dni
+    private User staff;
 
     @ManyToOne
     @JoinColumn(name = "device_id", nullable = false)
