@@ -17,30 +17,24 @@ import com.ElVikingoStore.Viking_App.Repositories.UserRepo;
 import com.ElVikingoStore.Viking_App.Repositories.WorkOrderRepo;
 
 import jakarta.persistence.EntityNotFoundException;
-@Slf4j
 @Service
+@Slf4j
 public class WorkOrderService {
-    @Autowired
-    private WorkOrderRepo workOrderRepo;
-    @Autowired
-    private UserRepo userRepo;
-    @Autowired
-    private DeviceRepo deviceRepo;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private DeviceService deviceService;
 
-    public List<WorkOrder> getAll() {
-        return workOrderRepo.findAll();
+    private final WorkOrderRepo workOrderRepo;
+    private final UserService userService;
+    private final DeviceService deviceService;
+
+    @Autowired
+    public WorkOrderService(WorkOrderRepo workOrderRepo, UserService userService, DeviceService deviceService) {
+        this.workOrderRepo = workOrderRepo;
+        this.userService = userService;
+        this.deviceService = deviceService;
     }
 
+    @Transactional
     public WorkOrder getWorkOrderById(Long id) {
-        return workOrderRepo.findById(id).orElse(null);
-    }
-
-    public List<WorkOrder> findByClientDni(Integer clientDni) {
-        return workOrderRepo.findByClient_Dni(clientDni);
+        return workOrderRepo.findById(id).orElseThrow(EntityNotFoundException::new);
     }
 
     @Transactional
@@ -53,12 +47,18 @@ public class WorkOrderService {
         User staff = userService.getUserById(Long.parseLong(workOrderDto.getStaffId()))
                 .orElseThrow(() -> new EntityNotFoundException("Staff not found with ID: " + workOrderDto.getStaffId()));
 
+        // Verificar si el staff tiene el rol correcto (rol_id = 1)
+        if (!userService.hasRoleId(staff.getEmail(), 1L)) {
+            throw new IllegalArgumentException("The specified staff user does not have the required role (rol_id = 1)");
+        }
+
         // Buscar dispositivo por ID
         Device device = deviceService.getDeviceById(workOrderDto.getDeviceId())
                 .orElseThrow(() -> new EntityNotFoundException("Device not found with ID: " + workOrderDto.getDeviceId()));
 
         // Crear la nueva orden de trabajo
         WorkOrder workOrder = new WorkOrder();
+        workOrder.setId(workOrderDto.getId()); // Asignar el ID manualmente
         workOrder.setClient(client);
         workOrder.setStaff(staff);
         workOrder.setDevice(device);
@@ -66,11 +66,8 @@ public class WorkOrderService {
         workOrder.setRepairStatus(workOrderDto.getRepairStatus());
 
         // Guardar y retornar la orden de trabajo
-        return workOrderRepo.save(workOrder);
-    }
-    public class CustomException extends Exception {
-        public CustomException(String message, Throwable cause) {
-            super(message, cause);
-        }
+        WorkOrder savedWorkOrder = workOrderRepo.save(workOrder);
+        log.info("Work order created successfully with ID: {}", savedWorkOrder.getId());
+        return savedWorkOrder;
     }
 }
