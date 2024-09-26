@@ -11,6 +11,7 @@ import com.ElVikingoStore.Viking_App.Repositories.UserRoleRepo;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -30,7 +31,7 @@ public class UserService {
     private RolRepo rolRepo;
 
     @Autowired
-    private UserRoleRepo userRoleRepository;
+    private UserRoleRepo userRoleRepo;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -50,7 +51,7 @@ public class UserService {
     }
     public List<User> getUsersByRoleId(Long rolId) {
         // Obtener los UserRoles por rolId
-        List<UserRole> userRoles = userRoleRepository.findByRol_Id(rolId);
+        List<UserRole> userRoles = userRoleRepo.findByRol_Id(rolId);
 
         // Extraer los IDs de usuarios y obtener los usuarios
         return userRoles.stream()
@@ -97,7 +98,7 @@ public class UserService {
         UserRole userRole = new UserRole();
         userRole.setUser(user);
         userRole.setRol(rol);
-        userRoleRepository.save(userRole);
+        userRoleRepo.save(userRole);
 
         log.info("User created successfully: {}", user.getEmail());
         return "Successfully registered";
@@ -139,5 +140,14 @@ public class UserService {
             return false; // Error al eliminar
         }
     }
-
+    public boolean hasRoleId(String email, Long roleId) {
+        Optional<User> userOptional = userRepo.findByEmail(email);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            // Buscar si el usuario tiene el rol especificado
+            Optional<UserRole> userRole = userRoleRepo.findRoleIdByUserId(user.getId());
+            return userRole.isPresent() && userRole.get().getRolId().equals(roleId);
+        }
+        return false;
+    }
 }
