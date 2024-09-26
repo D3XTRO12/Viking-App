@@ -28,10 +28,11 @@ public class Device {
 
     @Column(name = "serial_number")
     private String serialNumber;
-    
+
+    // Relación con User
     @ManyToOne
-    @JoinColumn(name = "client_id")
-    private Client client;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;  // Cambiado de Client a User
 
     public Device(Long id) {
         this.id = id;

@@ -29,18 +29,21 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class WorkOrder {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(unique = true, nullable = false)
     private Long id;
 
+    // Relación con el cliente (end-user o company)
     @ManyToOne
-    @JoinColumn(name = "client_dni", referencedColumnName = "dni", nullable = false)
-    private Client client;
+    @JoinColumn(name = "client_id", referencedColumnName = "dni", nullable = false)
+    private User client;  // Ahora es de tipo User para soportar tanto clientes finales como compañías
 
+    // Relación con el staff que realiza la reparación
     @ManyToOne
-    @JoinColumn(name = "staff_id", nullable = false)
-    private Staff staff;
+    @JoinColumn(name = "staff_id", referencedColumnName = "dni", nullable = false)
+    private User staff;  // Cambiado a User
 
     @ManyToOne
     @JoinColumn(name = "device_id", nullable = false)
@@ -55,4 +58,8 @@ public class WorkOrder {
     @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonIgnore
     private List<DiagnosticPoint> diagnosticPoints;
+
+    public void setDevice(Device device) {
+        this.deviceId = device;
+    }
 }

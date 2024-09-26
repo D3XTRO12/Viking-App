@@ -4,8 +4,11 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,7 +29,7 @@ import lombok.extern.log4j.Log4j2;
 
 @RestController
 @Log4j2
-@RequestMapping("/diagnostic-points")
+@RequestMapping("/api/diagnostic-points")
 public class DiagnosticPointResource {
 
     @Autowired
@@ -38,65 +41,63 @@ public class DiagnosticPointResource {
     @Autowired
     private StorageInterface storageService;
 
-
-
     // Nueva variable para almacenar la dirección IP
     @Value("${server.address}")
-    private String serverAddress; 
+    private String serverAddress;
     @Value("${server.port}")
     private String serverPort;
 
     @PostMapping(
-        value = "/add",
-        consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+            value = "/add",
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> addDiagnosticPoint(
-        @RequestPart("diagnosticPoint") String diagnosticPointJson,
-        @RequestPart("file") MultipartFile file) {
+            @RequestPart("diagnosticPoint") String diagnosticPointJson,
+            @RequestPart("file") MultipartFile file) {
         try {
             log.info("Entrando al método addDiagnosticPoint en DiagnosticPointResource...");
-            
+
             ObjectMapper objectMapper = new ObjectMapper();
             DiagnosticPoint diagnosticPoint = objectMapper.readValue(diagnosticPointJson, DiagnosticPoint.class);
-            
+
             log.info("DiagnosticPoint recibido: {}", diagnosticPoint);
-            
+
             if (file.isEmpty()) {
                 log.warn("No se recibió ningún archivo multimedia.");
                 return ResponseEntity.badRequest().body("Archivo multimedia no recibido");
             } else {
                 log.info("Archivo multimedia recibido: nombre del archivo - {}, tamaño - {} bytes", file.getOriginalFilename(), file.getSize());
             }
-    
+
             if (diagnosticPoint.getWorkOrder() == null || diagnosticPoint.getWorkOrder().getId() == null) {
                 log.warn("WorkOrder es null o su ID es null en el DiagnosticPoint recibido.");
                 return ResponseEntity.badRequest().body("WorkOrder no especificado o inválido");
             }
-    
+
             WorkOrder workOrder = workOrderService.getWorkOrderById(diagnosticPoint.getWorkOrder().getId());
             if (workOrder == null) {
                 log.warn("WorkOrder no encontrado.");
                 return ResponseEntity.badRequest().body("WorkOrder no encontrado");
             }
-    
+
             diagnosticPoint.setWorkOrder(workOrder);
-    
+
             String filename = storageService.store(file);
             // Cambia la URL para que utilice el formato solicitado
             String url = "http://" + serverAddress + ":" + serverPort + "/uploads/" + filename;
 
-    
+
             diagnosticPoint.getMultimediaFiles().add(url);
             DiagnosticPoint savedDiagnosticPoint = diagnosticPointService.addDiagnosticPoint(diagnosticPoint);
-    
+
             log.info("Punto de diagnóstico guardado: {}", savedDiagnosticPoint);
-    
+
             return ResponseEntity.ok(savedDiagnosticPoint);
         } catch (JsonProcessingException e) {
             log.error("Error al agregar el punto de diagnóstico: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Error al agregar el punto de diagnóstico: " + e.getMessage());
         }
     }
-    
+
     @GetMapping("/by-work-order/{workOrderId}/client/{clientDni}")
     public ResponseEntity<?> getDiagnosticPointsByWorkOrderAndClient(
             @PathVariable Long workOrderId,

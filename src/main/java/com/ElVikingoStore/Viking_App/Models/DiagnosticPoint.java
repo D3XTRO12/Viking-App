@@ -28,22 +28,25 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class DiagnosticPoint {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(unique = true, nullable = false)
     private Long id;
 
+    // Relación con la tabla de WorkOrder
     @ManyToOne
     @JoinColumn(name = "work_order_id", nullable = false)
-    private WorkOrder workOrder;
+    private WorkOrder workOrder;  // Asegura la relación con la entidad WorkOrder modificada
 
     @Column(name = "timestamp", nullable = false)
-    private Date timestamp;  // Cambiado a Date
+    private Date timestamp;
 
     @Column(name = "description", nullable = false)
     private String description;
 
-    @ElementCollection(fetch = FetchType.EAGER) // Cambia a EAGER
+    // Archivos multimedia asociados con este punto de diagnóstico
+    @ElementCollection(fetch = FetchType.EAGER)
     @Column(name = "multimedia_files")
     @Builder.Default
     private List<String> multimediaFiles = new ArrayList<>();

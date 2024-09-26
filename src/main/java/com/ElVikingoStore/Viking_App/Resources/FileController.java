@@ -9,11 +9,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.annotation.PostConstruct;
 
 @RestController
+@RequestMapping("/auth")
 public class FileController {
 
     @Value("${spring.web.resources.static-locations}")
@@ -30,6 +32,7 @@ public class FileController {
     }
 
     @GetMapping("/uploads/{filename:.+}")
+    // @PreAuthorize("role")
     public Resource serveFile(@PathVariable String filename) {
         try {
             Path file = rootLocation.resolve(filename);

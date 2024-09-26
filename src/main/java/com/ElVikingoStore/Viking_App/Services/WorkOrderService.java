@@ -3,32 +3,33 @@ package com.ElVikingoStore.Viking_App.Services;
 import java.util.List;
 import static java.util.Objects.requireNonNull;
 
+import com.ElVikingoStore.Viking_App.DTOs.WorkOrderDto;
+import com.ElVikingoStore.Viking_App.Models.Device;
+import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ElVikingoStore.Viking_App.Models.Client;
+import com.ElVikingoStore.Viking_App.Models.User;
 import com.ElVikingoStore.Viking_App.Models.WorkOrder;
-import com.ElVikingoStore.Viking_App.Repositories.ClientRepo;
 import com.ElVikingoStore.Viking_App.Repositories.DeviceRepo;
-import com.ElVikingoStore.Viking_App.Repositories.StaffRepo;
+import com.ElVikingoStore.Viking_App.Repositories.UserRepo;
 import com.ElVikingoStore.Viking_App.Repositories.WorkOrderRepo;
 
 import jakarta.persistence.EntityNotFoundException;
-
+@Slf4j
 @Service
 public class WorkOrderService {
-
-    private final WorkOrderRepo workOrderRepo;
-    private final ClientRepo clientRepo;
-    private final StaffRepo staffRepo;
-    private final DeviceRepo deviceRepo;
-
-    //@Autowired
-    public WorkOrderService(WorkOrderRepo workOrderRepo, ClientRepo clientRepo, StaffRepo staffRepo, DeviceRepo deviceRepo) {
-        this.workOrderRepo = workOrderRepo;
-        this.clientRepo = clientRepo;
-        this.staffRepo = staffRepo;
-        this.deviceRepo = deviceRepo;
-    }
+    @Autowired
+    private WorkOrderRepo workOrderRepo;
+    @Autowired
+    private UserRepo userRepo;
+    @Autowired
+    private DeviceRepo deviceRepo;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private DeviceService deviceService;
 
     public List<WorkOrder> getAll() {
         return workOrderRepo.findAll();
@@ -42,37 +43,29 @@ public class WorkOrderService {
         return workOrderRepo.findByClient_Dni(clientDni);
     }
 
-    public WorkOrder createWorkOrder(WorkOrder workOrderDto) throws CustomException {
-        Client client = clientRepo.findByDni(requireNonNull(workOrderDto.getClient()).getDni());
-        if (client == null) {
-            client = new Client();
-            client.setDni(requireNonNull(workOrderDto.getClient()).getDni());
-            // Setear otros atributos del cliente si es necesario
-            client = clientRepo.save(client);
-        }
-    
+    @Transactional
+    public WorkOrder saveWorkOrder(WorkOrderDto workOrderDto) {
+        // Buscar cliente por ID
+        User client = userService.getUserById(Long.parseLong(workOrderDto.getClientId()))
+                .orElseThrow(() -> new EntityNotFoundException("Client not found with ID: " + workOrderDto.getClientId()));
+
+        // Buscar staff por ID
+        User staff = userService.getUserById(Long.parseLong(workOrderDto.getStaffId()))
+                .orElseThrow(() -> new EntityNotFoundException("Staff not found with ID: " + workOrderDto.getStaffId()));
+
+        // Buscar dispositivo por ID
+        Device device = deviceService.getDeviceById(workOrderDto.getDeviceId())
+                .orElseThrow(() -> new EntityNotFoundException("Device not found with ID: " + workOrderDto.getDeviceId()));
+
+        // Crear la nueva orden de trabajo
         WorkOrder workOrder = new WorkOrder();
         workOrder.setClient(client);
-    
-        try {
-            workOrder.setStaff(staffRepo.findById(requireNonNull(workOrderDto.getStaff()).getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Staff not found")));
-        } catch (EntityNotFoundException e) {
-            System.out.println("Warning: Staff not found. Creating WorkOrder without Staff.");
-            throw new CustomException("Staff not found. Please select an existing staff.", e);
-        }
-    
-        try {
-            workOrder.setDeviceId(deviceRepo.findById(requireNonNull(workOrderDto.getDeviceId()).getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Device not found")));
-        } catch (EntityNotFoundException e) {
-            System.out.println("Warning: Device not found. Creating WorkOrder without Device.");
-            throw new CustomException("Device not found. Please select an existing device.", e);
-        }
-    
-        workOrder.setIssueDescription(requireNonNull(workOrderDto.getIssueDescription()));
-        workOrder.setRepairStatus(requireNonNull(workOrderDto.getRepairStatus()));
-    
+        workOrder.setStaff(staff);
+        workOrder.setDevice(device);
+        workOrder.setIssueDescription(workOrderDto.getIssueDescription());
+        workOrder.setRepairStatus(workOrderDto.getRepairStatus());
+
+        // Guardar y retornar la orden de trabajo
         return workOrderRepo.save(workOrder);
     }
     public class CustomException extends Exception {
@@ -80,5 +73,4 @@ public class WorkOrderService {
             super(message, cause);
         }
     }
-    
 }

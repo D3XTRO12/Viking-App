@@ -1,5 +1,6 @@
 package com.ElVikingoStore.Viking_App.Resources;
 
+import com.ElVikingoStore.Viking_App.DTOs.WorkOrderDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,7 +15,7 @@ import lombok.extern.log4j.Log4j2;
 
 @RestController
 @Log4j2
-@RequestMapping("/work-order")
+@RequestMapping("/api/work-order")
 public class WorkOrderResource {
 
     private final WorkOrderService workOrderService;
@@ -25,18 +26,8 @@ public class WorkOrderResource {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<?> createWorkOrder(@RequestBody WorkOrder workOrder) {
-        try {
-            log.info("Entrando al método createWorkOrder en WorkOrderResource...");
-            log.info("WorkOrder recibido: {}", workOrder);
-
-            WorkOrder createdWorkOrder = workOrderService.createWorkOrder(workOrder);
-            log.info("WorkOrder creado: {}", createdWorkOrder);
-
-            return ResponseEntity.ok(createdWorkOrder);
-        } catch (CustomException e) {
-            log.error("Error al crear el WorkOrder: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<WorkOrder> createWorkOrder(@RequestBody WorkOrderDto workOrderDto) {
+        WorkOrder createdWorkOrder = workOrderService.saveWorkOrder(workOrderDto);
+        return ResponseEntity.ok(createdWorkOrder);
     }
 }
