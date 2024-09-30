@@ -3,6 +3,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.ElVikingoStore.Viking_App.Models.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,7 +11,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.ElVikingoStore.Viking_App.Models.Rol;
 import com.ElVikingoStore.Viking_App.Models.User;
 import com.ElVikingoStore.Viking_App.Repositories.UserRepo;
 
@@ -32,7 +32,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 user.getPassword(), mapRolesToAuthorities(user.getRoles()));
     }
 
-    private Collection< ? extends GrantedAuthority> mapRolesToAuthorities(Set<Rol> roles){
-        return roles.stream().map(role -> new SimpleGrantedAuthority(role.getPermiso())).collect(Collectors.toList());
+    private Collection< ? extends GrantedAuthority> mapRolesToAuthorities(Set<Role> roles){
+        return roles.stream().map(role -> new SimpleGrantedAuthority(role.getPermission())).collect(Collectors.toList());
     }
 }
