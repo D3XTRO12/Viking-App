@@ -8,9 +8,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface UserRoleRepo extends JpaRepository<UserRole, Long> {
-    List<UserRole> findByRol_Id(Long rolId); // Acceso correcto al ID del rol
-    Optional<UserRole> findRoleIdByUserId(Long userId);
+public interface UserRoleRepo extends JpaRepository<UserRole, UUID> {
+    List<UserRole> findByRole_Id(UUID roleId); // Acceso correcto al ID del rol
+    Optional<UserRole> findRoleIdByUserId(UUID userId);
 }

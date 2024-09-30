@@ -1,14 +1,14 @@
 package com.ElVikingoStore.Viking_App.Repositories;
 
-import com.ElVikingoStore.Viking_App.Models.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import com.ElVikingoStore.Viking_App.Models.User;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface UserRepo extends JpaRepository<User, Long> {
+public interface UserRepo extends JpaRepository<User, UUID> {
 
     Optional<User> findByDni(Integer dni);
 
@@ -18,5 +18,5 @@ public interface UserRepo extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
-    Long findIdByEmail(String email);
+    UUID findIdByEmail(String email);
 }
