@@ -4,6 +4,7 @@ import com.ElVikingoStore.Viking_App.DTOs.WorkOrderDto;
 import com.ElVikingoStore.Viking_App.Services.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,11 +18,15 @@ import com.ElVikingoStore.Viking_App.Services.WorkOrderService;
 
 import lombok.extern.log4j.Log4j2;
 
+import java.util.UUID;
+
 @RestController
 @Log4j2
 @RequestMapping("/api/work-order")
 public class WorkOrderResource {
 
+    @Value("${admin.role-id}")
+    private String adminRoleId;
     private final WorkOrderService workOrderService;
     private final UserService userService;
 
@@ -31,21 +36,23 @@ public class WorkOrderResource {
         this.userService = userService;
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<?> createWorkOrder(@RequestBody WorkOrderDto workOrderDto, Authentication authentication) {
-        // Obtener el usuario autenticado
+    @PostMapping(value ="/save", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> saveWorkOrder(@RequestBody WorkOrderDto workOrderDto, Authentication authentication) {
         String email = authentication.getName();
+        // UUID del rol de staff (asegúrate de que este UUID sea correcto para tu sistema)
+        UUID staffRoleId = UUID.fromString(adminRoleId);
 
-        // Verificar si el usuario tiene el rol de staff (rol_id = 1)
-        if (!userService.hasRoleId(email, 1L)) {
+        if (!userService.hasRoleId(email, staffRoleId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: User is not staff");
         }
 
         try {
-            WorkOrder createdWorkOrder = workOrderService.saveWorkOrder(workOrderDto);
+            WorkOrder createdWorkOrder = workOrderService.saveWorkOrder(workOrderDto, email);
             return ResponseEntity.ok(createdWorkOrder);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             log.error("Error creating work order", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating work order");

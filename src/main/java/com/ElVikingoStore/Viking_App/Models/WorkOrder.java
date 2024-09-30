@@ -2,8 +2,10 @@ package com.ElVikingoStore.Viking_App.Models;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,7 +22,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+import java.util.UUID;
+import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Table(name = "work_orders")
 @Getter
@@ -29,24 +32,27 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class WorkOrder {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
 
     // Relación con el cliente (end-user o company)
     @ManyToOne
-    @JoinColumn(name = "client_dni", referencedColumnName = "dni", nullable = false)  // Cambiado a client_dni
+    @JoinColumn(name = "client_id", referencedColumnName = "id", nullable = false)
+    @JsonBackReference("clientReference")
     private User client;
 
     // Relación con el staff que realiza la reparación
     @ManyToOne
-    @JoinColumn(name = "staff_dni", referencedColumnName = "dni", nullable = false)  // Cambiado a staff_dni
+    @JoinColumn(name = "staff_id", referencedColumnName = "id", nullable = false)
+    @JsonBackReference("staffReference")
     private User staff;
 
     @ManyToOne
     @JoinColumn(name = "device_id", nullable = false)
+    @JsonBackReference
     private Device deviceId;
 
     @Column(name = "issue_description")
@@ -56,7 +62,7 @@ public class WorkOrder {
     private String repairStatus;
 
     @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JsonIgnore
+    @JsonManagedReference
     private List<DiagnosticPoint> diagnosticPoints;
 
     public void setDevice(Device device) {

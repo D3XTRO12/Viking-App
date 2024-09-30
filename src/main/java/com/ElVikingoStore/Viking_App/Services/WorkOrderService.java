@@ -1,6 +1,8 @@
 package com.ElVikingoStore.Viking_App.Services;
 
 import java.util.List;
+import java.util.UUID;
+
 import static java.util.Objects.requireNonNull;
 
 import com.ElVikingoStore.Viking_App.DTOs.WorkOrderDto;
@@ -33,41 +35,50 @@ public class WorkOrderService {
     }
 
     @Transactional
-    public WorkOrder getWorkOrderById(Long id) {
-        return workOrderRepo.findById(id).orElseThrow(EntityNotFoundException::new);
+    public WorkOrder getWorkOrderById(UUID id) {
+        return workOrderRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Work order not found with ID: " + id));
     }
 
-    @Transactional
-    public WorkOrder saveWorkOrder(WorkOrderDto workOrderDto) {
-        // Buscar cliente por ID
-        User client = userService.getUserById(Long.parseLong(workOrderDto.getClientId()))
-                .orElseThrow(() -> new EntityNotFoundException("Client not found with ID: " + workOrderDto.getClientId()));
+    public WorkOrder saveWorkOrder(WorkOrderDto workOrderDto, String staffEmail) {
+        log.info("Attempting to save work order: {}", workOrderDto);
 
-        // Buscar staff por ID
-        User staff = userService.getUserById(Long.parseLong(workOrderDto.getStaffId()))
-                .orElseThrow(() -> new EntityNotFoundException("Staff not found with ID: " + workOrderDto.getStaffId()));
+        User staff = findUserByEmail(staffEmail);
+        User client = findUser(workOrderDto.getClientId(), "Client");
+        Device device = findAndValidateDevice(workOrderDto.getDeviceId(), client);
 
-        // Verificar si el staff tiene el rol correcto (rol_id = 1)
-        if (!userService.hasRoleId(staff.getEmail(), 1L)) {
-            throw new IllegalArgumentException("The specified staff user does not have the required role (rol_id = 1)");
-        }
-
-        // Buscar dispositivo por ID
-        Device device = deviceService.getDeviceById(workOrderDto.getDeviceId())
-                .orElseThrow(() -> new EntityNotFoundException("Device not found with ID: " + workOrderDto.getDeviceId()));
-
-        // Crear la nueva orden de trabajo
         WorkOrder workOrder = new WorkOrder();
-        workOrder.setId(workOrderDto.getId()); // Asignar el ID manualmente
         workOrder.setClient(client);
         workOrder.setStaff(staff);
         workOrder.setDevice(device);
         workOrder.setIssueDescription(workOrderDto.getIssueDescription());
         workOrder.setRepairStatus(workOrderDto.getRepairStatus());
 
-        // Guardar y retornar la orden de trabajo
         WorkOrder savedWorkOrder = workOrderRepo.save(workOrder);
-        log.info("Work order created successfully with ID: {}", savedWorkOrder.getId());
+
+        log.info("Work order created and saved successfully with ID: {}", savedWorkOrder.getId());
         return savedWorkOrder;
     }
+    private User findUserByEmail(String email) {
+        User user = userService.getUserByEmail(email);
+        if (user == null) {
+            throw new EntityNotFoundException("User not found with email: " + email);
+        }
+        return user;
+    }
+
+    private User findUser(UUID userId, String userType) {
+        return userService.getUserById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(userType + " not found with ID: " + userId));
+    }
+
+    private Device findAndValidateDevice(UUID deviceId, User client) {
+        Device device = deviceService.getDeviceById(deviceId)
+                .orElseThrow(() -> new EntityNotFoundException("Device not found with ID: " + deviceId));
+        if (!device.getUser().getId().equals(client.getId())) {
+            throw new IllegalArgumentException("The device does not belong to the specified client");
+        }
+        return device;
+    }
+
 }
