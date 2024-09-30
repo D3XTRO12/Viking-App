@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.annotation.PostConstruct;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api")
 public class FileController {
 
     @Value("${spring.web.resources.static-locations}")
@@ -32,7 +32,6 @@ public class FileController {
     }
 
     @GetMapping("/uploads/{filename:.+}")
-    // @PreAuthorize("role")
     public Resource serveFile(@PathVariable String filename) {
         try {
             Path file = rootLocation.resolve(filename);
