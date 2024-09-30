@@ -2,6 +2,7 @@ package com.ElVikingoStore.Viking_App.Services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,12 +35,12 @@ public class DiagnosticPointService {
         return diagnosticPointRepo.save(diagnosticPoint);
     }
 
-    public List<DiagnosticPoint> getDiagnosticPointsByWorkOrderId(Long workOrderId) {
+    public List<DiagnosticPoint> getDiagnosticPointsByWorkOrderId(UUID workOrderId) {
         return diagnosticPointRepo.findByWorkOrder_Id(workOrderId);
     }
 
     @Transactional(readOnly = true) // Asegura que haya una sesión activa para la carga
-    public DiagnosticPoint findById(Long id) {
+    public DiagnosticPoint findById(UUID id) {
         // Encuentra el DiagnosticPoint por su ID
         DiagnosticPoint diagnosticPoint = diagnosticPointRepo.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("DiagnosticPoint not found for ID: " + id));

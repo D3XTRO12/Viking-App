@@ -1,12 +1,14 @@
 package com.ElVikingoStore.Viking_App.Resources;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,13 +19,14 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.ElVikingoStore.Viking_App.Models.DiagnosticPoint;
 import com.ElVikingoStore.Viking_App.Models.WorkOrder;
 import com.ElVikingoStore.Viking_App.Repositories.StorageInterface;
 import com.ElVikingoStore.Viking_App.Services.DiagnosticPointService;
 import com.ElVikingoStore.Viking_App.Services.WorkOrderService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -50,6 +53,7 @@ public class DiagnosticPointResource {
     @PostMapping(
             value = "/add",
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> addDiagnosticPoint(
             @RequestPart("diagnosticPoint") String diagnosticPointJson,
             @RequestPart("file") MultipartFile file) {
@@ -83,7 +87,7 @@ public class DiagnosticPointResource {
 
             String filename = storageService.store(file);
             // Cambia la URL para que utilice el formato solicitado
-            String url = "http://" + serverAddress + ":" + serverPort + "/uploads/" + filename;
+            String url = "http://" + serverAddress + ":" + serverPort + "/api/uploads/" + filename;
 
 
             diagnosticPoint.getMultimediaFiles().add(url);
@@ -98,19 +102,19 @@ public class DiagnosticPointResource {
         }
     }
 
-    @GetMapping("/by-work-order/{workOrderId}/client/{clientDni}")
+    @GetMapping("/by-work-order/{workOrderId}/client/{clientId}")
     public ResponseEntity<?> getDiagnosticPointsByWorkOrderAndClient(
-            @PathVariable Long workOrderId,
-            @PathVariable int clientDni) {
+            @PathVariable UUID workOrderId,
+            @PathVariable UUID clientId) {
         try {
             log.info("Entrando al método getDiagnosticPointsByWorkOrderAndClient en DiagnosticPointResource...");
             log.info("WorkOrder ID: {}", workOrderId);
-            log.info("Client DNI: {}", clientDni);
+            log.info("Client ID: {}", clientId);
 
             WorkOrder workOrder = workOrderService.getWorkOrderById(workOrderId);
-            if (workOrder == null || !workOrder.getClient().getDni().equals(clientDni)) {
-                log.warn("WorkOrder no encontrado o DNI del cliente no coincide.");
-                return ResponseEntity.badRequest().body("WorkOrder no encontrado o DNI del cliente no coincide");
+            if (workOrder == null || !workOrder.getClient().getId().equals(clientId)) {
+                log.warn("WorkOrder no encontrado o ID del cliente no coincide.");
+                return ResponseEntity.badRequest().body("WorkOrder no encontrado o ID del cliente no coincide");
             }
 
             List<DiagnosticPoint> diagnosticPoints = diagnosticPointService.getDiagnosticPointsByWorkOrderId(workOrderId);
@@ -126,6 +130,4 @@ public class DiagnosticPointResource {
             return ResponseEntity.badRequest().body("Error al obtener los puntos de diagnóstico: " + e.getMessage());
         }
     }
-
-
 }

@@ -3,7 +3,9 @@ package com.ElVikingoStore.Viking_App.Models;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -19,6 +21,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
 
 @Entity
 @Table(name = "diagnostic_points")
@@ -30,13 +33,15 @@ import lombok.Setter;
 public class DiagnosticPoint {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
 
     // Relación con la tabla de WorkOrder
     @ManyToOne
     @JoinColumn(name = "work_order_id", nullable = false)
+    @JsonBackReference
     private WorkOrder workOrder;  // Asegura la relación con la entidad WorkOrder modificada
 
     @Column(name = "timestamp", nullable = false)
