@@ -1,16 +1,14 @@
 package com.ElVikingoStore.Viking_App.Resources;
 
 import com.ElVikingoStore.Viking_App.DTOs.UserDto;
-import com.ElVikingoStore.Viking_App.Models.User;
-import com.ElVikingoStore.Viking_App.Repositories.UserRepo;
+
+import com.ElVikingoStore.Viking_App.Models.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
+
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.InternalAuthenticationServiceException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ElVikingoStore.Viking_App.DTOs.JwtAuthResponse;
 import com.ElVikingoStore.Viking_App.DTOs.LoginUserDto;
-import com.ElVikingoStore.Viking_App.JWT.JwtTokenProvider;
+
 import com.ElVikingoStore.Viking_App.Services.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,11 +32,12 @@ public class AuthResource {
     @Autowired
     private AuthService authService;
 
-    @PostMapping("/signup")
+    @PostMapping(value = "/signup", consumes = "application/json", produces = "application/json")
     public ResponseEntity<String> registerUser(@Valid @RequestBody UserDto userDto) {
         String response = authService.registerUser(userDto);
         return ResponseEntity.ok(response);
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginUserDto loginDto) {

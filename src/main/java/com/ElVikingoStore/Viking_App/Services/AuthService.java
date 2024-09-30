@@ -6,11 +6,11 @@ import com.ElVikingoStore.Viking_App.DTOs.LoginUserDto;
 import com.ElVikingoStore.Viking_App.DTOs.UserDto;
 import com.ElVikingoStore.Viking_App.JWT.JwtTokenProvider;
 
-import com.ElVikingoStore.Viking_App.Models.Rol;
+import com.ElVikingoStore.Viking_App.Models.Role;
 import com.ElVikingoStore.Viking_App.Models.User;
 import com.ElVikingoStore.Viking_App.Models.UserRole;
 
-import com.ElVikingoStore.Viking_App.Repositories.RolRepo;
+import com.ElVikingoStore.Viking_App.Repositories.RoleRepo;
 import com.ElVikingoStore.Viking_App.Repositories.UserRepo;
 import com.ElVikingoStore.Viking_App.Repositories.UserRoleRepo;
 
@@ -25,18 +25,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 public class AuthService {
 
     @Autowired
-    private UserRepo userRepository;
+    private UserRepo userRepo;
 
     @Autowired
-    private RolRepo rolRepository;
+    private RoleRepo roleRepo;
 
     @Autowired
-    private UserRoleRepo userRoleRepository;
+    private UserRoleRepo userRoleRepo;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -50,9 +52,7 @@ public class AuthService {
 
     public String registerUser(UserDto userDto) {
         // Verificar si el rol existe
-        Long rolId = userDto.getUserRoles().iterator().next().getRolId();
-        Rol rol = rolRepository.findById(rolId)
-                .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado con ID: " + rolId));
+        Role role = validateRole(userDto.getRoleId());
 
         User user = new User();
         user.setName(userDto.getName());
@@ -65,14 +65,15 @@ public class AuthService {
         user.setPassword(encodePassword(userDto.getPassword()));
 
         // Guardar el usuario
-        userRepository.save(user);
+        userRepo.save(user);
 
         // Crear y guardar el UserRole
         UserRole userRole = new UserRole();
         userRole.setUser(user);
-        userRole.setRol(rol); // Establecer el rol recuperado
-        userRoleRepository.save(userRole);
-        return "Successfully registered";
+        userRole.setRole(role); // Establecer el rol recuperado
+        userRoleRepo.save(userRole);
+
+        return ("Successfully registered:" + user);
     }
 
     public JwtAuthResponse loginUser(LoginUserDto loginDto) throws BadCredentialsException {
@@ -94,15 +95,21 @@ public class AuthService {
             throw e;
         }
     }
-
+    // Método para validar el rol
+    private Role validateRole(UUID roleId) {
+        return roleRepo.findById(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado con ID: " + roleId));
+    }
 
     public boolean validateToken(String token) {
+
         return tokenProvider.validateToken(token);
     }
     // Método para codificar la contraseña
-private String encodePassword(String password) {
-    return passwordEncoder.encode(password);
-}
+    private String encodePassword(String password) {
+
+        return passwordEncoder.encode(password);
+    }
 }
 
 

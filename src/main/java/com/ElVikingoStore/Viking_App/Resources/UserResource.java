@@ -3,6 +3,7 @@ package com.ElVikingoStore.Viking_App.Resources;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 import com.ElVikingoStore.Viking_App.Services.UserRoleService;
 import jakarta.validation.Valid;
@@ -28,7 +29,7 @@ public class UserResource {
 
     // Búsqueda de usuarios según tipo o parámetros como DNI, CUIT, o ID
     @GetMapping("/search")
-    public ResponseEntity<Object> searchUser(@RequestParam(required = false) Long id,
+    public ResponseEntity<Object> searchUser(@RequestParam(required = false) UUID id,
                                              @RequestParam(required = false) Integer dni,
                                              @RequestParam(required = false) String cuit,
                                              @RequestParam(required = false) String query) {
@@ -107,7 +108,7 @@ public class UserResource {
 
     // Eliminar un usuario por ID
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
         try {
             Optional<User> existingUser = userService.getUserById(id);
             if (existingUser == null) {
