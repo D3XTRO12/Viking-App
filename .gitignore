@@ -9,7 +9,7 @@
 *.bz2
 *.tar
 *.tmp
-
+*.txt
 # Archivos de configuración específicos del IDE
 .idea/
 .vscode/
