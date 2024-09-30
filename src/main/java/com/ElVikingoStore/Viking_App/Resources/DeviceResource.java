@@ -3,6 +3,7 @@ package com.ElVikingoStore.Viking_App.Resources;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 import com.ElVikingoStore.Viking_App.DTOs.DeviceDto;
 import jakarta.validation.Valid;
@@ -31,11 +32,11 @@ public class DeviceResource {
     @Autowired
     UserService userService;
 
-    @GetMapping("/search")
-    public ResponseEntity<Object> searchDevice(@RequestParam(required = false) Long id,
+    @GetMapping(value = "/search")
+    public ResponseEntity<Object> searchDevice(@RequestParam(required = false) UUID id,
                                                @RequestParam(required = false) String serialNumber,
                                                @RequestParam(required = false) String brand,
-                                               @RequestParam(required = false) Long userId,
+                                               @RequestParam(required = false) UUID userId,
                                                @RequestParam(required = false) String query) {
         try {
             if (query == null) {

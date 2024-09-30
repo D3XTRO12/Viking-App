@@ -1,7 +1,11 @@
 package com.ElVikingoStore.Viking_App.Models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
+
+import java.util.UUID;
 
 @Entity
 @Table(name = "device")
@@ -13,9 +17,10 @@ import lombok.*;
 public class Device {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
 
     @Column(name = "device_type")
     private String type;
@@ -32,9 +37,10 @@ public class Device {
     // Relación con User
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;  // Cambiado de Client a User
+    @JsonBackReference // Evita recursión al serializar la relación con User
+    private User user;
 
-    public Device(Long id) {
+    public Device(UUID id) {
         this.id = id;
     }
 }

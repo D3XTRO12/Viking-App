@@ -5,13 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class DeviceDto {
 
-    private Long id;
+    private UUID id;
 
     private String type;
 
@@ -21,5 +23,5 @@ public class DeviceDto {
 
     private String serialNumber;
 
-    private Long userId;
+    private UUID userId;
 }

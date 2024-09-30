@@ -3,6 +3,7 @@ package com.ElVikingoStore.Viking_App.Services;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import com.ElVikingoStore.Viking_App.DTOs.DeviceDto;
 import com.ElVikingoStore.Viking_App.JWT.JwtTokenProvider;
@@ -32,7 +33,7 @@ public class DeviceService {
         return (ArrayList<Device>) deviceRepo.findAll();
     }
 
-    public Optional<Device> getDeviceById(Long id){
+    public Optional<Device> getDeviceById(UUID id){
         return deviceRepo.findById(id);
     }
     public List<Device> getDevicesByUser(Optional<User> user) {
@@ -48,7 +49,7 @@ public class DeviceService {
     @Transactional
     public String saveDeviceInstance(DeviceDto deviceDto) {
         // Verificar si el userId está presente en el DTO
-        Long userId = deviceDto.getUserId();
+        UUID userId = deviceDto.getUserId();
 
         // Verificar si el usuario existe en la base de datos
         User user = userRepo.findById(userId)
