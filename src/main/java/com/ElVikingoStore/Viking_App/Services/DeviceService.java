@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.ElVikingoStore.Viking_App.DTOs.DeviceDto;
 import com.ElVikingoStore.Viking_App.JWT.JwtTokenProvider;
@@ -21,40 +22,57 @@ import jakarta.transaction.Transactional;
 public class DeviceService {
     @Autowired
     DeviceRepo deviceRepo;
-
     @Autowired
     UserRepo userRepo;
-
     @Autowired
     private JwtTokenProvider tokenProvider;
 
-
-    public ArrayList<Device> getAll(){
-        return (ArrayList<Device>) deviceRepo.findAll();
+    public List<DeviceDto> getAllDevicesDto() {
+        return deviceRepo.findAll().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
-
     public Optional<Device> getDeviceById(UUID id){
         return deviceRepo.findById(id);
     }
-    public List<Device> getDevicesByUser(Optional<User> user) {
-        return deviceRepo.findByUser(user);
+    public Optional<DeviceDto> getDeviceDtoById(UUID id) {
+        return deviceRepo.findById(id).map(this::convertToDto);
     }
 
-    public Device getDeviceBySerialNumber(String serialNumber){
-        return deviceRepo.findBySerialNumber(serialNumber);
+    public List<DeviceDto> getDevicesDtoByUser(Optional<User> user) {
+        return deviceRepo.findByUser(user).stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
-    public List<Device> getDevicesByBrand(String brand) {
-        return deviceRepo.findByBrand(brand); // Asegúrate de que este método esté definido en tu repositorio
+
+    public DeviceDto getDeviceDtoBySerialNumber(String serialNumber) {
+        Device device = deviceRepo.findBySerialNumber(serialNumber);
+        return device != null ? convertToDto(device) : null;
+    }
+
+    public List<DeviceDto> getDevicesDtoByBrand(String brand) {
+        return deviceRepo.findByBrand(brand).stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    private DeviceDto convertToDto(Device device) {
+        DeviceDto dto = new DeviceDto();
+        dto.setId(device.getId());
+        dto.setType(device.getType());
+        dto.setBrand(device.getBrand());
+        dto.setModel(device.getModel());
+        dto.setSerialNumber(device.getSerialNumber());
+        dto.setUserId(device.getUser() != null ? device.getUser().getId() : null);
+        return dto;
     }
     @Transactional
     public String saveDeviceInstance(DeviceDto deviceDto) {
         // Verificar si el userId está presente en el DTO
         UUID userId = deviceDto.getUserId();
-
         // Verificar si el usuario existe en la base de datos
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + userId));
-
         // Crear una nueva instancia de Device
         Device device = new Device();
         device.setType(deviceDto.getType());

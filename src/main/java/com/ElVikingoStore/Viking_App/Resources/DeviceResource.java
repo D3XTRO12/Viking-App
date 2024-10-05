@@ -43,12 +43,12 @@ public class DeviceResource {
                 return ResponseEntity.badRequest().body("Query parameter is required");
             }
 
-            System.out.println("Query: " + query); // Imprimir la query recibida
+            System.out.println("Query: " + query);
 
             switch (query.toLowerCase()) {
                 case "all" -> {
                     System.out.println("Searching all devices");
-                    List<Device> devices = deviceService.getAll();
+                    List<DeviceDto> devices = deviceService.getAllDevicesDto();
                     return ResponseEntity.ok(devices);
                 }
                 case "by-id" -> {
@@ -56,7 +56,7 @@ public class DeviceResource {
                         return ResponseEntity.badRequest().body("ID is required for 'by-id' query");
                     }
                     System.out.println("Searching device by ID");
-                    Optional<Device> deviceById = deviceService.getDeviceById(id);
+                    Optional<DeviceDto> deviceById = deviceService.getDeviceDtoById(id);
                     return ResponseEntity.ok(deviceById);
                 }
                 case "by-serial-number" -> {
@@ -64,7 +64,7 @@ public class DeviceResource {
                         return ResponseEntity.badRequest().body("Serial number is required for 'by-serial-number' query");
                     }
                     System.out.println("Searching device by Serial Number");
-                    Device deviceBySerialNumber = deviceService.getDeviceBySerialNumber(serialNumber);
+                    DeviceDto deviceBySerialNumber = deviceService.getDeviceDtoBySerialNumber(serialNumber);
                     return ResponseEntity.ok(deviceBySerialNumber);
                 }
                 case "by-brand" -> {
@@ -72,7 +72,7 @@ public class DeviceResource {
                         return ResponseEntity.badRequest().body("Brand is required for 'by-brand' query");
                     }
                     System.out.println("Searching device by Brand");
-                    List<Device> devicesByBrand = deviceService.getDevicesByBrand(brand);
+                    List<DeviceDto> devicesByBrand = deviceService.getDevicesDtoByBrand(brand);
                     return ResponseEntity.ok(devicesByBrand);
                 }
                 case "by-user-id" -> {
@@ -81,7 +81,7 @@ public class DeviceResource {
                     }
                     System.out.println("Searching devices by User ID");
                     Optional<User> user = userService.getUserById(userId);
-                    List<Device> devicesByUser = deviceService.getDevicesByUser(user);
+                    List<DeviceDto> devicesByUser = deviceService.getDevicesDtoByUser(user);
                     return ResponseEntity.ok(devicesByUser);
                 }
                 default -> {
@@ -94,7 +94,6 @@ public class DeviceResource {
             return ResponseEntity.badRequest().body("Error processing request: " + e.getMessage());
         }
     }
-
     @PostMapping("/save")
     public ResponseEntity<String> registerDevice(@Valid @RequestBody DeviceDto deviceDto) {
         String response = deviceService.saveDeviceInstance(deviceDto);

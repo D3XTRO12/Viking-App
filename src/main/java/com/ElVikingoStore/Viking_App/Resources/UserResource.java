@@ -32,6 +32,7 @@ public class UserResource {
     public ResponseEntity<Object> searchUser(@RequestParam(required = false) UUID id,
                                              @RequestParam(required = false) Integer dni,
                                              @RequestParam(required = false) String cuit,
+                                             @RequestParam(required = false) UUID roleId,
                                              @RequestParam(required = false) String query) {
         // JWT debería verificar automáticamente el acceso aquí
         try {
@@ -65,13 +66,15 @@ public class UserResource {
                     User userByCuit = userService.getUserByCuit(cuit);
                     return ResponseEntity.ok(userByCuit);
                 }
-                case "by-roleId" -> {
-                    if (id == null) {
-                        return ResponseEntity.badRequest().body("ID is required for 'by-roleId' query");
+                case "by-role" -> {
+                    if (roleId == null) {
+                        return ResponseEntity.badRequest().body("Role ID is required for 'by-roleId' query");
                     }
-                    List<User> users = userService.getUsersByRoleId(id);
+                    System.out.println("Searching users by roleId: " + roleId); // Agrega esta línea
+                    List<User> users = userService.getUsersByRoleId(roleId);
                     return ResponseEntity.ok(users);
                 }
+
                 default -> {
                     return ResponseEntity.badRequest().body("Invalid query parameter");
                 }
@@ -91,20 +94,25 @@ public class UserResource {
     }
 
     // Actualizar los detalles de un usuario
-    //@PutMapping("/update/{id}")
-   // public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
-      //  try {
-        //    Optional<User> existingUser = userService.getUserById(id);
-          //  if (existingUser == null) {
-            //    return ResponseEntity.notFound().build();
-            //}
+    @PutMapping("/update/{id}")
+    public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @Valid @RequestBody UserDto userDto) {
+        try {
+            if (!id.equals(userDto.getId())) {
+                return ResponseEntity.badRequest().build();
+            }
 
-            //User updatedUser = userService.updateUser(existingUser, userDetails);
-            //return ResponseEntity.ok(updatedUser);
-        //} catch (Exception e) {
-          //  return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating user: " + e.getMessage());
-        //}
-    //}
+            UserDto updateUser = userService.updateUser(userDto);
+            if (updateUser != null) {
+                return ResponseEntity.ok(updateUser); // Respuesta 200 OK con el objeto actualizado
+            } else {
+                return ResponseEntity.notFound().build(); // Retorna 404 si no se encuentra
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build(); // Retorna 500 en caso de error interno
+        }
+    }
+
 
     // Eliminar un usuario por ID
     @DeleteMapping("/delete/{id}")

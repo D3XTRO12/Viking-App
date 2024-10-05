@@ -11,10 +11,8 @@ import com.ElVikingoStore.Viking_App.Models.Device;
 
 @Repository
 public interface DeviceRepo extends JpaRepository<Device, Long> {
-
     Device findBySerialNumber(String serialNumber);
     List<Device> findByBrand(String brand); // Método para buscar dispositivos por marca
     List<Device> findByUser(Optional<User> user);
-
     Optional<Device> findById(UUID id);
 } 

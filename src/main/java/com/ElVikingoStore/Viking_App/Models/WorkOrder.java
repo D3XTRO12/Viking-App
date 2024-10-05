@@ -53,7 +53,7 @@ public class WorkOrder {
     @ManyToOne
     @JoinColumn(name = "device_id", nullable = false)
     @JsonBackReference
-    private Device deviceId;
+    private Device device; // Cambiado de deviceId a device
 
     @Column(name = "issue_description")
     private String issueDescription;
@@ -65,7 +65,5 @@ public class WorkOrder {
     @JsonManagedReference
     private List<DiagnosticPoint> diagnosticPoints;
 
-    public void setDevice(Device device) {
-        this.deviceId = device;
-    }
+
 }

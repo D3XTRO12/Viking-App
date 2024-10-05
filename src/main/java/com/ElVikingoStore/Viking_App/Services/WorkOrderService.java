@@ -1,10 +1,14 @@
 package com.ElVikingoStore.Viking_App.Services;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
+import com.ElVikingoStore.Viking_App.DTOs.DeviceDto;
 import com.ElVikingoStore.Viking_App.DTOs.WorkOrderDto;
 import com.ElVikingoStore.Viking_App.Models.Device;
 import jakarta.transaction.Transactional;
@@ -14,8 +18,6 @@ import org.springframework.stereotype.Service;
 
 import com.ElVikingoStore.Viking_App.Models.User;
 import com.ElVikingoStore.Viking_App.Models.WorkOrder;
-import com.ElVikingoStore.Viking_App.Repositories.DeviceRepo;
-import com.ElVikingoStore.Viking_App.Repositories.UserRepo;
 import com.ElVikingoStore.Viking_App.Repositories.WorkOrderRepo;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -39,6 +41,22 @@ public class WorkOrderService {
         return workOrderRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Work order not found with ID: " + id));
     }
+
+    public List<WorkOrderDto> getAllWorkOrders() {
+        List<WorkOrder> workOrders = workOrderRepo.findAll();
+        return workOrders.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    public List<WorkOrderDto> getWorkOrdersByStaffId(UUID staffId) {
+        List<WorkOrder> workOrders = workOrderRepo.findByStaffId(staffId);
+        return workOrders.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    public List<WorkOrderDto> getWorkOrdersByClientId(UUID clientId) {
+        List<WorkOrder> workOrders = workOrderRepo.findByClientId(clientId);
+        return workOrders.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
 
     public WorkOrder saveWorkOrder(WorkOrderDto workOrderDto, String staffEmail) {
         log.info("Attempting to save work order: {}", workOrderDto);
@@ -81,4 +99,14 @@ public class WorkOrderService {
         return device;
     }
 
+    private WorkOrderDto convertToDto(WorkOrder workOrder) {
+        return WorkOrderDto.builder()
+                .id(workOrder.getId())
+                .clientId(workOrder.getClient().getId())
+                .staffId(workOrder.getStaff().getId())
+                .deviceId(workOrder.getDevice().getId())
+                .issueDescription(workOrder.getIssueDescription())
+                .repairStatus(workOrder.getRepairStatus())
+                .build();
+    }
 }

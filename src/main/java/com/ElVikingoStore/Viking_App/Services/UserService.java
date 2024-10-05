@@ -50,15 +50,14 @@ public class UserService {
         return userRepo.findById(id);
     }
     public List<User> getUsersByRoleId(UUID rolId) {
-        // Obtener los UserRoles por rolId
         List<UserRole> userRoles = userRoleRepo.findByRole_Id(rolId);
 
-        // Extraer los IDs de usuarios y obtener los usuarios
         return userRoles.stream()
                 .map(userRole -> userRepo.findById(userRole.getUser().getId())
                         .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userRole.getUser().getId())))
                 .collect(Collectors.toList());
     }
+
     // Obtener un usuario por DNI
     public User getUserByDni(Integer dni) {
         return userRepo.findByDni(dni)
@@ -99,6 +98,52 @@ public class UserService {
         return "User created successfully";
     }
 
+    @Transactional
+    public UserDto updateUser(UserDto userDto) {
+        User existingUser = userRepo.findById(userDto.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Actualizar los campos del usuario
+        existingUser.setName(userDto.getName());
+        existingUser.setDni(userDto.getDni());
+        existingUser.setUserType(userDto.getUserType());
+        existingUser.setAddress(userDto.getAddress());
+        existingUser.setPhoneNumber(userDto.getPhoneNumber());
+        existingUser.setSecondaryPhoneNumber(userDto.getSecondaryPhoneNumber());
+        existingUser.setEmail(userDto.getEmail());
+        existingUser.setCuit(userDto.getCuit());
+
+        // Actualizar la contraseña si se proporciona una nueva
+        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
+            existingUser.setPassword(encodePassword(userDto.getPassword()));
+        }
+
+        // Guardar los cambios del usuario
+        userRepo.save(existingUser);
+
+        // Actualizar el rol si se proporciona un nuevo roleId
+        if (userDto.getRoleId() != null) {
+            Role newRole = validateRole(userDto.getRoleId());
+
+            // Buscar el UserRole existente
+            Optional<UserRole> existingUserRoleOpt = userRoleRepo.findRoleIdByUserId(existingUser.getId());
+
+            if (existingUserRoleOpt.isPresent()) {
+                UserRole existingUserRole = existingUserRoleOpt.get();
+                existingUserRole.setRole(newRole);
+                userRoleRepo.save(existingUserRole);
+            } else {
+                // Si no existe un UserRole, creamos uno nuevo
+                UserRole newUserRole = new UserRole();
+                newUserRole.setUser(existingUser);
+                newUserRole.setRole(newRole);
+                userRoleRepo.save(newUserRole);
+            }
+        }
+
+        return convertToDto(existingUser);
+    }
+
     // Metodo auxiliar para codificar la contraseña (si es necesario)
     private String encodePassword(String password) {
         return passwordEncoder.encode(password);
@@ -133,5 +178,24 @@ public class UserService {
     private Role validateRole(UUID roleId) {
         return roleRepo.findById(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado con ID: " + roleId));
+    }
+
+    private UserDto convertToDto(User user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setDni(user.getDni());
+        dto.setUserType(user.getUserType());
+        dto.setAddress(user.getAddress());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setSecondaryPhoneNumber(user.getSecondaryPhoneNumber());
+        dto.setEmail(user.getEmail());
+        dto.setCuit(user.getCuit());
+
+        // Obtener el roleId del UserRole asociado
+        Optional<UserRole> userRoleOpt = userRoleRepo.findRoleIdByUserId(user.getId());
+        userRoleOpt.ifPresent(userRole -> dto.setRoleId(userRole.getRole().getId()));
+
+        return dto;
     }
 }
