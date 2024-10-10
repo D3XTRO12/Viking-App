@@ -53,55 +53,42 @@ public class DiagnosticPointResource {
     @PostMapping(
             value = "/add",
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> addDiagnosticPoint(
             @RequestPart("diagnosticPoint") String diagnosticPointJson,
             @RequestPart("file") MultipartFile file) {
         try {
             log.info("Entrando al método addDiagnosticPoint en DiagnosticPointResource...");
-
             ObjectMapper objectMapper = new ObjectMapper();
             DiagnosticPoint diagnosticPoint = objectMapper.readValue(diagnosticPointJson, DiagnosticPoint.class);
-
             log.info("DiagnosticPoint recibido: {}", diagnosticPoint);
-
             if (file.isEmpty()) {
                 log.warn("No se recibió ningún archivo multimedia.");
                 return ResponseEntity.badRequest().body("Archivo multimedia no recibido");
             } else {
                 log.info("Archivo multimedia recibido: nombre del archivo - {}, tamaño - {} bytes", file.getOriginalFilename(), file.getSize());
             }
-
             if (diagnosticPoint.getWorkOrder() == null || diagnosticPoint.getWorkOrder().getId() == null) {
                 log.warn("WorkOrder es null o su ID es null en el DiagnosticPoint recibido.");
                 return ResponseEntity.badRequest().body("WorkOrder no especificado o inválido");
             }
-
             WorkOrder workOrder = workOrderService.getWorkOrderById(diagnosticPoint.getWorkOrder().getId());
             if (workOrder == null) {
                 log.warn("WorkOrder no encontrado.");
                 return ResponseEntity.badRequest().body("WorkOrder no encontrado");
             }
-
             diagnosticPoint.setWorkOrder(workOrder);
-
             String filename = storageService.store(file);
             // Cambia la URL para que utilice el formato solicitado
-            String url = "http://" + serverAddress + ":" + serverPort + "/api/uploads/" + filename;
-
-
+            String url = "http://" + serverAddress + ":" + serverPort + "/auth/uploads/" + filename;
             diagnosticPoint.getMultimediaFiles().add(url);
             DiagnosticPoint savedDiagnosticPoint = diagnosticPointService.addDiagnosticPoint(diagnosticPoint);
-
             log.info("Punto de diagnóstico guardado: {}", savedDiagnosticPoint);
-
             return ResponseEntity.ok(savedDiagnosticPoint);
         } catch (JsonProcessingException e) {
             log.error("Error al agregar el punto de diagnóstico: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Error al agregar el punto de diagnóstico: " + e.getMessage());
         }
     }
-
     @GetMapping("/by-work-order/{workOrderId}/client/{clientId}")
     public ResponseEntity<?> getDiagnosticPointsByWorkOrderAndClient(
             @PathVariable UUID workOrderId,

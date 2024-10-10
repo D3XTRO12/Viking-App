@@ -42,4 +42,13 @@ public class UserRoleService {
 
         return null;
     }
+
+    public boolean isUserStaff(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        return userRoleRepo.findByUser(user)
+                .map(userRole -> "staff".equals(userRole.getRole().getDescripcion()))
+                .orElse(false);
+    }
 }

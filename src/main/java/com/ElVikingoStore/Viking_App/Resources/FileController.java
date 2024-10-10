@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.annotation.PostConstruct;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/auth")
 public class FileController {
 
     @Value("${spring.web.resources.static-locations}")

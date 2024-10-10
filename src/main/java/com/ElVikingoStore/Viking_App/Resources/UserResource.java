@@ -33,6 +33,7 @@ public class UserResource {
                                              @RequestParam(required = false) Integer dni,
                                              @RequestParam(required = false) String cuit,
                                              @RequestParam(required = false) UUID roleId,
+                                             @RequestParam(required = false) String email,
                                              @RequestParam(required = false) String query) {
         // JWT debería verificar automáticamente el acceso aquí
         try {
@@ -58,6 +59,13 @@ public class UserResource {
                     }
                     User userByDni = userService.getUserByDni(dni);
                     return ResponseEntity.ok(userByDni);
+                }
+                case "by-email" ->{
+                    if (email == null) {
+                        return ResponseEntity.badRequest().body("Email is required for 'by-email' query");
+                    }
+                    User userByEmail = userService.getUserByEmail(email);
+                    return ResponseEntity.ok(userByEmail);
                 }
                 case "by-cuit" -> {
                     if (cuit == null) {

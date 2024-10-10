@@ -25,19 +25,16 @@ import java.util.UUID;
 @Log4j2
 @RequestMapping("/api/work-order")
 public class WorkOrderResource {
-
     @Value("${admin.role-id}")
     private String adminRoleId;
     private final WorkOrderService workOrderService;
     private final UserService userService;
-
     @Autowired
     public WorkOrderResource(WorkOrderService workOrderService, UserService userService) {
         this.workOrderService = workOrderService;
         this.userService = userService;
         log.info("WorkOrderResource initialized with adminRoleId: {}", adminRoleId);
     }
-
     @GetMapping("/search")
     public ResponseEntity<Object> searchWorkOrder(@RequestParam(required = false) UUID staffId,
                                                   @RequestParam(required = false) UUID clientId,
@@ -90,12 +87,6 @@ public class WorkOrderResource {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing request: " + e.getMessage());
         }
     }
-
-    @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        log.info("Test endpoint called");
-        return ResponseEntity.ok("WorkOrderResource is working");
-    }
     @PostMapping(value ="/save")
     public ResponseEntity<?> saveWorkOrder(@RequestBody WorkOrderDto workOrderDto, Authentication authentication) {
         String email = authentication.getName();
@@ -117,5 +108,12 @@ public class WorkOrderResource {
             log.error("Error creating work order", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating work order");
         }
+    }
+
+    @PutMapping("/{orderId}")
+    public ResponseEntity<Object> updateWorkOrderStatus(@PathVariable UUID orderId, @RequestBody WorkOrderDto workOrderDto) {
+        log.info("Received update request for work order {} with new status {}", orderId, workOrderDto.getRepairStatus());
+        workOrderService.updateWorkOrderStatus(orderId, workOrderDto.getRepairStatus());
+        return ResponseEntity.ok("Work order status updated successfully");
     }
 }

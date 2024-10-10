@@ -109,4 +109,10 @@ public class WorkOrderService {
                 .repairStatus(workOrder.getRepairStatus())
                 .build();
     }
+
+    public void updateWorkOrderStatus(UUID orderId, String newStatus) {
+        WorkOrder workOrder = workOrderRepo.findById(orderId).orElseThrow();
+        workOrder.setRepairStatus(newStatus);
+        workOrderRepo.save(workOrder);
+    }
 }
