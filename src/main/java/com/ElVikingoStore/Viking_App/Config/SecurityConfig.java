@@ -31,49 +31,56 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthEntryPoint authenticationEntryPoint;
-    
+
     @Autowired
-	private CustomUserDetailsService usuarioService;
-	
-	@Bean
+    private CustomUserDetailsService usuarioService;
+
+    @Bean
     public JwtAuthFilter jwtAuthenticationFilter(){
-        return  new JwtAuthFilter();
+        return new JwtAuthFilter();
     }
-	
-	@Bean
+
+    @Bean
     PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
-	}
-	
-	@Bean
+    }
+
+    @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-	
-	@Bean
+
+    @Bean
     protected SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(corsCustomizer -> corsCustomizer.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf
-                        .disable())
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(requests -> requests
+                        // Rutas públicas
                         .requestMatchers("/auth/**", "/actuator/**").permitAll()
+                        // Rutas de Swagger UI
+                        .requestMatchers("/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml",
+                                "/api-docs/**",
+                                "/webjars/**").permitAll()
+                        // El resto requiere autenticación
                         .anyRequest().authenticated()
-                        )
+                )
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint(authenticationEntryPoint))
                 .sessionManagement(management -> management
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                        ;
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-		
-		http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-		http.authenticationProvider(doAuthenticationProvider());
-		
-		return http.build();
+        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.authenticationProvider(doAuthenticationProvider());
 
+        return http.build();
     }
+
     private CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Collections.singletonList("*"));
@@ -81,13 +88,12 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Collections.singletonList("*"));
         return request -> configuration;
     }
-    
+
     @Bean
-	public DaoAuthenticationProvider doAuthenticationProvider() {
-		
-		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-		provider.setUserDetailsService(usuarioService);
-		provider.setPasswordEncoder(passwordEncoder());
-		return provider;
-	}
+    public DaoAuthenticationProvider doAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(usuarioService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
 }

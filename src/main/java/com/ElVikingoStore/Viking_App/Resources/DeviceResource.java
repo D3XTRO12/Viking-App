@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.ElVikingoStore.Viking_App.DTOs.DeviceDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import com.ElVikingoStore.Viking_App.Models.User;
 import com.ElVikingoStore.Viking_App.Services.DeviceService;
 import com.ElVikingoStore.Viking_App.Services.UserService;
 
+@Tag(name = "Device Controller", description = "API para la gestión de dispositivos")
 @RestController
 @RequestMapping("/api/device")
 public class DeviceResource {
@@ -32,6 +35,10 @@ public class DeviceResource {
     @Autowired
     UserService userService;
 
+    @Operation(
+            summary = "Buscar Dispositivos",
+            description = "Busca dispositivos en la base de datos"
+    )
     @GetMapping(value = "/search")
     public ResponseEntity<Object> searchDevice(@RequestParam(required = false) UUID id,
                                                @RequestParam(required = false) String serialNumber,
@@ -94,6 +101,10 @@ public class DeviceResource {
             return ResponseEntity.badRequest().body("Error processing request: " + e.getMessage());
         }
     }
+    @Operation(
+            summary = "Guardar Dispositivos",
+            description ="Guarda un dispositivo en la base de datos"
+    )
     @PostMapping("/save")
     public ResponseEntity<String> registerDevice(@Valid @RequestBody DeviceDto deviceDto) {
         String response = deviceService.saveDeviceInstance(deviceDto);

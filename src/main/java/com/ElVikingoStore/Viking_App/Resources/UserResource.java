@@ -5,8 +5,14 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.ElVikingoStore.Viking_App.Exception.ApiError;
+import com.ElVikingoStore.Viking_App.Exception.UnauthorizedException;
+import com.ElVikingoStore.Viking_App.Exception.UserNotFoundException;
 import com.ElVikingoStore.Viking_App.Services.UserRoleService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import com.ElVikingoStore.Viking_App.Models.User;
 import com.ElVikingoStore.Viking_App.DTOs.UserDto;
 import com.ElVikingoStore.Viking_App.Services.UserService;
-
+@Tag(name = "User Controller", description = "API para la gestión de usuarios")
 @RestController
 @RequestMapping("/api/user")
 public class UserResource {
@@ -26,7 +32,10 @@ public class UserResource {
 
     @Autowired
     private UserRoleService userRoleService;  // Servicio para manejar roles de usuario
-
+    @Operation(
+            summary = "Buscar Usuario",
+            description = "Busca un usuario en la base de datos"
+    )
     // Búsqueda de usuarios según tipo o parámetros como DNI, CUIT, o ID
     @GetMapping("/search")
     public ResponseEntity<Object> searchUser(@RequestParam(required = false) UUID id,
@@ -93,14 +102,20 @@ public class UserResource {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing request: " + e.getMessage());
         }
     }
-
+    @Operation(
+            summary = "Guardar Usuario",
+            description = "Guarda un nuevo usuario en la base de datos"
+    )
     // Guardar una nueva instancia de usuario (cliente o staff)
     @PostMapping("/save")
     public ResponseEntity<String> registerUser(@Valid @RequestBody UserDto userDto) {
         String response = userService.saveUserInstance(userDto);
         return ResponseEntity.ok(response);
     }
-
+    @Operation(
+            summary = "Actualizar Usuario",
+            description = "Actualiza un usuario existente"
+    )
     // Actualizar los detalles de un usuario
     @PutMapping("/update/{id}")
     public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @Valid @RequestBody UserDto userDto) {
@@ -121,7 +136,10 @@ public class UserResource {
         }
     }
 
-
+    @Operation(
+            summary = "Eliminar Usuario",
+            description = "Elimina un usuario existente"
+    )
     // Eliminar un usuario por ID
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
@@ -142,8 +160,29 @@ public class UserResource {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting user: " + e.getMessage());
         }
     }
-
-    // Método para verificar el permiso del usuario autenticado
+    @Operation(
+            summary = "Obtener Usuario Actual",
+            description = "Obtiene la información del usuario autenticado"
+    )
+    @GetMapping("/current")
+    public ResponseEntity<?> getCurrentUser() {
+        try {
+            return ResponseEntity.ok(userService.getCurrentUserInfo());
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiError("Usuario no encontrado"));
+        } catch (UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiError("No autorizado"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiError("Error interno del servidor"));
+        }
+    }
+    @Operation(
+            summary = "Verificar Permisos",
+            description = "Verifica si el usuario autenticado tiene un permiso específico"
+    )
     private boolean hasPermission(String requiredPermission) {
         // Obtener el usuario autenticado
         String username = SecurityContextHolder.getContext().getAuthentication().getName();

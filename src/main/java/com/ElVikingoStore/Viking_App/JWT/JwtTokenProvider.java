@@ -7,6 +7,8 @@ import java.util.Map;
 import javax.crypto.SecretKey;
 
 import io.jsonwebtoken.*;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -19,8 +21,13 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.log4j.Log4j2;
 
+@SecurityScheme(
+        name = "bearerAuth",
+        type = SecuritySchemeType.HTTP,
+        bearerFormat = "JWT",
+        scheme = "bearer"
+)
 @Component
-@Log4j2
 public class JwtTokenProvider {
 
 
@@ -39,13 +46,11 @@ public class JwtTokenProvider {
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationInMs))
                 .signWith(signWithKey(), SignatureAlgorithm.HS512)
                 .compact();
-        log.info("Generated token: " + token);
         return token;
     }
 
     // get username from the token
     public String getUsernameFromJWT(String token){
-        log.info("Parsing username fro token: " + token);
         Claims claims = Jwts.parser()
                 .verifyWith(signWithKey())
                 .build()
@@ -58,10 +63,8 @@ public class JwtTokenProvider {
     // validate JWT token
     public boolean validateToken(String token) {
         if (!StringUtils.hasText(token)) {
-            log.warn("Invalid JWT token");
             return false;
         }
-        log.info("Validating token: " + token);
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(signWithKey())
@@ -71,7 +74,6 @@ public class JwtTokenProvider {
 
             return !claims.getExpiration().before(new Date());
         } catch (MalformedJwtException ex) {
-            log.warn("Token malformado: " + token, ex);
             throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid JWT token");
         } catch (ExpiredJwtException ex) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Expired JWT token");
@@ -80,7 +82,6 @@ public class JwtTokenProvider {
         } catch (IllegalArgumentException ex) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "JWT claims string is empty.");
         } catch (SignatureException ex) {
-            log.error("JWT signature exception", ex);
             throw new ApiException(HttpStatus.BAD_REQUEST, "falla api exception");
         }
     }
@@ -90,7 +91,6 @@ public class JwtTokenProvider {
             String[] parts = bearerToken.split("\\s+");
             if (parts.length == 2) {
                 String token = parts[1].trim();
-                log.info("Token parsed from Bearer: " + token);
                 return token;
             }
         }
@@ -98,7 +98,6 @@ public class JwtTokenProvider {
     }
 
     private SecretKey signWithKey() {
-        log.info("Secret key (first 10 characters): " + secretKey.substring(0, Math.min(10, secretKey.length())));
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }

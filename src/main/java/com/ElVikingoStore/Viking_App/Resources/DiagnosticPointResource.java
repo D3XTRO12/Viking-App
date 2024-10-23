@@ -3,6 +3,8 @@ package com.ElVikingoStore.Viking_App.Resources;
 import java.util.List;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -29,9 +31,8 @@ import com.ElVikingoStore.Viking_App.Services.DiagnosticPointService;
 import com.ElVikingoStore.Viking_App.Services.WorkOrderService;
 
 import lombok.extern.log4j.Log4j2;
-
+@Tag(name = "DiagnosticPoint", description = "Endpoints para la gestión de puntos de diagnóstico")
 @RestController
-@Log4j2
 @RequestMapping("/api/diagnostic-points")
 public class DiagnosticPointResource {
 
@@ -49,7 +50,10 @@ public class DiagnosticPointResource {
     private String serverAddress;
     @Value("${server.port}")
     private String serverPort;
-
+    @Operation(
+            summary = "Agregar punto de diagnóstico",
+            description = "Agrega un nuevo punto de diagnóstico a una orden de trabajo"
+    )
     @PostMapping(
             value = "/add",
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -57,23 +61,17 @@ public class DiagnosticPointResource {
             @RequestPart("diagnosticPoint") String diagnosticPointJson,
             @RequestPart("file") MultipartFile file) {
         try {
-            log.info("Entrando al método addDiagnosticPoint en DiagnosticPointResource...");
             ObjectMapper objectMapper = new ObjectMapper();
             DiagnosticPoint diagnosticPoint = objectMapper.readValue(diagnosticPointJson, DiagnosticPoint.class);
-            log.info("DiagnosticPoint recibido: {}", diagnosticPoint);
             if (file.isEmpty()) {
-                log.warn("No se recibió ningún archivo multimedia.");
                 return ResponseEntity.badRequest().body("Archivo multimedia no recibido");
             } else {
-                log.info("Archivo multimedia recibido: nombre del archivo - {}, tamaño - {} bytes", file.getOriginalFilename(), file.getSize());
             }
             if (diagnosticPoint.getWorkOrder() == null || diagnosticPoint.getWorkOrder().getId() == null) {
-                log.warn("WorkOrder es null o su ID es null en el DiagnosticPoint recibido.");
                 return ResponseEntity.badRequest().body("WorkOrder no especificado o inválido");
             }
             WorkOrder workOrder = workOrderService.getWorkOrderById(diagnosticPoint.getWorkOrder().getId());
             if (workOrder == null) {
-                log.warn("WorkOrder no encontrado.");
                 return ResponseEntity.badRequest().body("WorkOrder no encontrado");
             }
             diagnosticPoint.setWorkOrder(workOrder);
@@ -82,25 +80,22 @@ public class DiagnosticPointResource {
             String url = "http://" + serverAddress + ":" + serverPort + "/auth/uploads/" + filename;
             diagnosticPoint.getMultimediaFiles().add(url);
             DiagnosticPoint savedDiagnosticPoint = diagnosticPointService.addDiagnosticPoint(diagnosticPoint);
-            log.info("Punto de diagnóstico guardado: {}", savedDiagnosticPoint);
             return ResponseEntity.ok(savedDiagnosticPoint);
         } catch (JsonProcessingException e) {
-            log.error("Error al agregar el punto de diagnóstico: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Error al agregar el punto de diagnóstico: " + e.getMessage());
         }
     }
+    @Operation(
+            summary = "Obtener puntos de diagnóstico por ID de orden de trabajo",
+            description = "Obtiene una lista de puntos de diagnóstico por ID de orden de trabajo y Cliente Asociado a la orden de trabajo"
+    )
     @GetMapping("/by-work-order/{workOrderId}/client/{clientId}")
     public ResponseEntity<?> getDiagnosticPointsByWorkOrderAndClient(
             @PathVariable UUID workOrderId,
             @PathVariable UUID clientId) {
         try {
-            log.info("Entrando al método getDiagnosticPointsByWorkOrderAndClient en DiagnosticPointResource...");
-            log.info("WorkOrder ID: {}", workOrderId);
-            log.info("Client ID: {}", clientId);
-
             WorkOrder workOrder = workOrderService.getWorkOrderById(workOrderId);
             if (workOrder == null || !workOrder.getClient().getId().equals(clientId)) {
-                log.warn("WorkOrder no encontrado o ID del cliente no coincide.");
                 return ResponseEntity.badRequest().body("WorkOrder no encontrado o ID del cliente no coincide");
             }
 
@@ -109,11 +104,9 @@ public class DiagnosticPointResource {
             // Convertir a JSON para un log más legible
             ObjectMapper mapper = new ObjectMapper();
             String jsonResult = mapper.writeValueAsString(diagnosticPoints);
-            log.info("Puntos de diagnóstico encontrados: {}", jsonResult);
 
             return ResponseEntity.ok(diagnosticPoints);
         } catch (JsonProcessingException e) {
-            log.error("Error al obtener los puntos de diagnóstico: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Error al obtener los puntos de diagnóstico: " + e.getMessage());
         }
     }

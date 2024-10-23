@@ -4,14 +4,19 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.ElVikingoStore.Viking_App.DTOs.UserDto;
+import com.ElVikingoStore.Viking_App.Exception.UnauthorizedException;
 import com.ElVikingoStore.Viking_App.Models.Role;
 import com.ElVikingoStore.Viking_App.Models.UserRole;
 import com.ElVikingoStore.Viking_App.Repositories.RoleRepo;
 import com.ElVikingoStore.Viking_App.Repositories.RoleRepo;
 import com.ElVikingoStore.Viking_App.Repositories.UserRoleRepo;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -19,8 +24,7 @@ import com.ElVikingoStore.Viking_App.Models.User;
 import com.ElVikingoStore.Viking_App.Repositories.UserRepo;
 
 import jakarta.transaction.Transactional;
-
-@Slf4j
+@Schema(name = "UserService", description = "Servicio para la gestión de usuarios")
 @Service
 public class UserService {
 
@@ -40,15 +44,16 @@ public class UserService {
         this.userRepo = userRepo;
     }
 
-    // Obtener todos los usuarios
+    @Operation(summary = "Obtener todos los usuarios", description = "Obtiene una lista de todos los usuarios registrados en el sistema")
     public ArrayList<User> getAllUsers(){
         return (ArrayList<User>) userRepo.findAll();
     }
 
-    // Obtener un usuario por ID
+    @Operation(summary = "Obtener usuario por ID", description = "Obtiene un usuario por su ID")
     public Optional<User> getUserById(UUID id) {
         return userRepo.findById(id);
     }
+    @Operation(summary = "Obtener usuario por su rolId", description = "Obtiene una lista de usuarios por su rolId")
     public List<User> getUsersByRoleId(UUID rolId) {
         List<UserRole> userRoles = userRoleRepo.findByRole_Id(rolId);
 
@@ -58,21 +63,22 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    // Obtener un usuario por DNI
-    public User getUserByDni(Integer dni) {
+@Operation(summary = "Obtener usuario por DNI", description = "Obtiene un usuario por su DNI")
+public User getUserByDni(Integer dni) {
         return userRepo.findByDni(dni)
                 .orElseThrow(() -> new NoSuchElementException("User not found with DNI: " + dni));
     }
+    @Operation(summary = "Obtener usuario por email", description = "Obtiene un usuario por su email")
     public User getUserByEmail(String email) {
         return userRepo.findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("User not found with email: " + email));
     }
-    // Obtener un usuario por CUIT (para empresas)
-    public User getUserByCuit(String cuit) {
+@Operation(summary = "Obtener usuario por CUIT", description = "Obtiene un usuario por su CUIT")
+public User getUserByCuit(String cuit) {
         return userRepo.findByCuit(cuit)
                 .orElseThrow(() -> new NoSuchElementException("User not found with CUIT: " + cuit));
     }
-
+    @Operation(summary = "Guardar Instancia de Usuario", description = "Guarda un nuevo usuario en la base de datos")
     @Transactional
     public String saveUserInstance(UserDto userDto) {
         Role role = validateRole(userDto.getRoleId());
@@ -97,7 +103,7 @@ public class UserService {
         userRoleRepo.save(userRole);
         return "User created successfully";
     }
-
+    @Operation(summary = "Actualizar usuario", description = "Actualiza un usuario existente en el sistema")
     @Transactional
     public UserDto updateUser(UserDto userDto) {
         User existingUser = userRepo.findById(userDto.getId())
@@ -144,14 +150,14 @@ public class UserService {
         return convertToDto(existingUser);
     }
 
-    // Metodo auxiliar para codificar la contraseña (si es necesario)
-    private String encodePassword(String password) {
+@Operation(summary = "Encriptar Contraseña", description = "Encripta la contraseña del usuario en caso de necesitarse")
+private String encodePassword(String password) {
         return passwordEncoder.encode(password);
     }
 
 
-    // Eliminar un usuario por ID
-    public boolean deleteUser(UUID id) {
+@Operation(summary = "Eliminar usuario", description = "Elimina un usuario del sistema")
+public boolean deleteUser(UUID id) {
         try {
             Optional<User> optionalUser = userRepo.findById(id);
             if (optionalUser.isEmpty()) {
@@ -164,6 +170,7 @@ public class UserService {
             return false; // Error al eliminar
         }
     }
+    @Operation(summary = "Verificar si el usuario tiene un rol específico", description = "Verifica si un usuario tiene un rol específico")
     public boolean hasRoleId(String email, UUID roleId) {
         Optional<User> userOptional = userRepo.findByEmail(email);
         if (userOptional.isPresent()) {
@@ -174,12 +181,12 @@ public class UserService {
         }
         return false;
     }
-    // Método para validar el rol
-    private Role validateRole(UUID roleId) {
+@Operation(summary = "Validar Rol", description = "Valida la existencia de un rol en la base de datos")
+private Role validateRole(UUID roleId) {
         return roleRepo.findById(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado con ID: " + roleId));
     }
-
+@Operation(summary = "Convertir a DTO", description = "Convierte un objeto User a UserDto")
     private UserDto convertToDto(User user) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());
@@ -197,5 +204,28 @@ public class UserService {
         userRoleOpt.ifPresent(userRole -> dto.setRoleId(userRole.getRole().getId()));
 
         return dto;
+    }
+    @Operation(summary = "Obtener información del usuario actual", description = "Obtiene la información del usuario autenticado")
+    public UserDto getCurrentUserInfo() {
+        Authentication authentication = getAuthentication();
+        String email = getEmailFromAuthentication(authentication);
+        User user = getUserByEmail(email); // Usando tu método existente
+        return convertToDto(user); // Usando tu método existente
+    }
+    @Operation(summary = "Verificacion de Autenticación", description = "Verifica si el usuario está autenticado")
+    private Authentication getAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new UnauthorizedException("No hay usuario autenticado");
+        }
+        return authentication;
+    }
+    @Operation(summary = "Obtener el email del usuario autenticado", description = "Obtiene el email del usuario autenticado")
+    private String getEmailFromAuthentication(Authentication authentication) {
+        String email = authentication.getName();
+        if (email == null || email.isEmpty()) {
+            throw new UnauthorizedException("Email de usuario no válido");
+        }
+        return email;
     }
 }

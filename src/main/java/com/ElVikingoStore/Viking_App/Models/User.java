@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,6 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Schema(description = "Entidad que representa un usuario en el sistema")
 @Entity
 @Table(name = "users")
 @Getter
@@ -26,75 +28,105 @@ import lombok.Setter;
 @AllArgsConstructor
 public class User implements UserDetails, java.io.Serializable {
 
+    @Schema(description = "Identificador único del usuario", example = "123e4567-e89b-12d3-a456-426614174000")
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
+    @Schema(description = "Nombre completo del usuario", example = "Juan Pérez", required = true)
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Schema(description = "Documento Nacional de Identidad", example = "12345678", required = true)
     @Column(name = "dni", unique = true, nullable = false)
     private Integer dni;
 
+    @Schema(
+            description = "Tipo de usuario en el sistema",
+            example = "end-user",
+            allowableValues = {"end-user", "company", "staff"},
+            required = true
+    )
     @Column(name = "user_type", nullable = false)
-    private String userType; // 'end-user', 'company', 'staff'
+    private String userType;
 
+    @Schema(description = "Dirección del usuario", example = "Av. Siempreviva 742", required = true)
     @Column(name = "address", nullable = false)
     private String address;
 
+    @Schema(description = "Número de teléfono principal", example = "+54 11 1234-5678", required = true)
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
+    @Schema(description = "Número de teléfono secundario", example = "+54 11 8765-4321")
     @Column(name = "secondary_phone_number")
     private String secondaryPhoneNumber;
 
+    @Schema(description = "Correo electrónico del usuario", example = "juan.perez@email.com")
     @Column(name = "email")
     private String email;
 
+    @Schema(
+            description = "Contraseña del usuario (requerida para company y staff)",
+            example = "hashedPassword123",
+            accessMode = Schema.AccessMode.WRITE_ONLY
+    )
     @JsonIgnore
     @Column(name = "password")
-    private String password; // Opcional para 'end-user', obligatorio para 'company' y 'staff'
+    private String password;
 
+    @Schema(
+            description = "CUIT de la empresa (solo para usuarios tipo company)",
+            example = "20-12345678-9"
+    )
     @JsonIgnore
     @Column(name = "cuit", unique = true)
-    private String cuit; // Solo para 'company'
+    private String cuit;
 
-    @OneToMany(mappedBy = "client") // Relación inversa con WorkOrder como cliente
+    @Schema(description = "Órdenes de trabajo donde el usuario es cliente")
+    @OneToMany(mappedBy = "client")
     @JsonManagedReference("clientReference")
     @JsonIgnore
     private List<WorkOrder> workOrdersAsClient;
 
-    @OneToMany(mappedBy = "staff") // Relación inversa con WorkOrder como staff
+    @Schema(description = "Órdenes de trabajo donde el usuario es staff")
+    @OneToMany(mappedBy = "staff")
     @JsonIgnore
     private List<WorkOrder> workOrdersAsStaff;
 
+    @Schema(description = "Dispositivos asociados al usuario")
     @OneToMany(mappedBy = "user")
-    @JsonManagedReference // Para serializar los dispositivos del usuario
+    @JsonManagedReference
     @JsonIgnore
     private List<Device> devices;
 
-
-    @OneToMany(mappedBy = "user",
+    @Schema(description = "Roles asignados al usuario")
+    @OneToMany(
+            mappedBy = "user",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
-            fetch = FetchType.EAGER)
-    @JsonManagedReference // Rompe el ciclo de referencia con UserRole
+            fetch = FetchType.EAGER
+    )
+    @JsonManagedReference
     @JsonIgnore
     private Set<UserRole> userRoles = new HashSet<>();
 
 
+    @Schema(description = "Agrega un rol al usuario")
     public void addRole(Role role) {
         UserRole userRole = new UserRole();
         userRole.setUser(this);
         userRole.setRole(role);
         userRoles.add(userRole);
     }
-
+    @Schema(description = "Quita un rol al usuario")
     public void removeRole(Role rol) {
         userRoles.removeIf(userRole -> userRole.getRole().equals(rol));
     }
+
+    @Schema(description = "Obtiene Los Roles del usuario")
     @JsonIgnore
     public Set<Role> getRoles() {
         return userRoles.stream()

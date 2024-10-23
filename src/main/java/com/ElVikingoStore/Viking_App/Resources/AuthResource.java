@@ -3,6 +3,8 @@ package com.ElVikingoStore.Viking_App.Resources;
 import com.ElVikingoStore.Viking_App.DTOs.UserDto;
 
 import com.ElVikingoStore.Viking_App.Models.Role;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,34 +25,31 @@ import com.ElVikingoStore.Viking_App.Services.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+@Tag(name = "Auth", description = "Endpoints para autenticación y registro de usuarios")
 
-@Slf4j
 @RestController
 @RequestMapping("/auth")
 public class AuthResource {
 
     @Autowired
     private AuthService authService;
-
+    @Operation(summary = "Registro de usuario", description = "Crea un nuevo usuario en el sistema")
     @PostMapping(value = "/signup", consumes = "application/json", produces = "application/json")
     public ResponseEntity<String> registerUser(@Valid @RequestBody UserDto userDto) {
         String response = authService.registerUser(userDto);
         return ResponseEntity.ok(response);
     }
 
-
+    @Operation(summary = "Login de usuario", description = "Inicia sesión en el sistema")
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginUserDto loginDto) {
-        log.info("Login attempt for user: {}", loginDto.getEmail());
         try {
             JwtAuthResponse response = authService.loginUser(loginDto);
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
-            log.warn("Failed login attempt for user: {}", loginDto.getEmail());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid username or password");
         } catch (Exception e) {
-            log.error("Unexpected error during login for user: {}", loginDto.getEmail(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred");
         }

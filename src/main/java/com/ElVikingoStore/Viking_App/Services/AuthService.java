@@ -14,6 +14,8 @@ import com.ElVikingoStore.Viking_App.Repositories.RoleRepo;
 import com.ElVikingoStore.Viking_App.Repositories.UserRepo;
 import com.ElVikingoStore.Viking_App.Repositories.UserRoleRepo;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
-
-@Slf4j
+@Schema(name = "AuthService", description = "Servicio para autenticación y registro de usuarios")
 @Service
 public class AuthService {
 
@@ -48,8 +49,7 @@ public class AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-
-
+    @Operation(summary = "Registro de usuario", description = "Crea un nuevo usuario en el sistema")
     public String registerUser(UserDto userDto) {
         // Verificar si el rol existe
         Role role = validateRole(userDto.getRoleId());
@@ -75,9 +75,8 @@ public class AuthService {
 
         return ("Successfully registered:" + user);
     }
-
+    @Operation(summary = "Login de usuario", description = "Inicia sesión en el sistema")
     public JwtAuthResponse loginUser(LoginUserDto loginDto) throws BadCredentialsException {
-        log.info("Attempting to authenticate user with email: {}", loginDto.getEmail());
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
@@ -85,18 +84,15 @@ public class AuthService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
-            log.info("User {} authenticated successfully, token generated.", loginDto.getEmail());
             return new JwtAuthResponse(jwt);
         } catch (BadCredentialsException e) {
-            log.error("Invalid credentials for user: {}", loginDto.getEmail(), e);
             throw e;
         } catch (Exception e) {
-            log.error("Unexpected error during authentication for user: {}", loginDto.getEmail(), e);
             throw e;
         }
     }
-    // Método para validar el rol
-    private Role validateRole(UUID roleId) {
+@Operation(summary = "Validar Rol", description = "Valida la existencia de un rol en la base de datos")
+private Role validateRole(UUID roleId) {
         return roleRepo.findById(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado con ID: " + roleId));
     }
@@ -105,8 +101,8 @@ public class AuthService {
 
         return tokenProvider.validateToken(token);
     }
-    // Método para codificar la contraseña
-    private String encodePassword(String password) {
+@Operation(summary = "Encriptar Contraseña", description = "Encripta la contraseña del usuario")
+private String encodePassword(String password) {
 
         return passwordEncoder.encode(password);
     }

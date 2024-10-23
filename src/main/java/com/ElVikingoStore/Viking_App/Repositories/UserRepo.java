@@ -1,5 +1,6 @@
 package com.ElVikingoStore.Viking_App.Repositories;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import com.ElVikingoStore.Viking_App.Models.User;
@@ -9,14 +10,14 @@ import java.util.UUID;
 
 @Repository
 public interface UserRepo extends JpaRepository<User, UUID> {
-
+    @Operation(summary = "Buscar usuario por DNI")
     Optional<User> findByDni(Integer dni);
-
+    @Operation(summary = "Buscar usuario por CUIT")
     Optional<User> findByCuit(String cuit);
-
+    @Operation(summary = "Buscar usuario por email")
     Optional<User> findByEmail(String email);
-
+    @Operation(summary = "Verifica si existe el usuario por email")
     boolean existsByEmail(String email);
-
+    @Operation(summary = "Buscar ID por email")
     UUID findIdByEmail(String email);
 }

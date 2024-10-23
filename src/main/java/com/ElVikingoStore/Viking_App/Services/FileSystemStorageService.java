@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -17,19 +19,16 @@ import com.ElVikingoStore.Viking_App.Repositories.StorageInterface;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
-
-@Log4j2
+@Schema(name = "FileSystemStorageService", description = "Servicio para almacenamiento de archivos en el sistema de archivos")
 @Service
 public final class FileSystemStorageService implements StorageInterface {
 
     private final Path rootLocation;
-
-    // Inyectar la propiedad upload.path
     public FileSystemStorageService(@Value("${upload.path}") String uploadPath) {
         this.rootLocation = Paths.get(uploadPath);
         init(); // Inicializar el directorio si no existe
     }
-
+    @Operation(summary = "Almacenar archivo", description = "Almacena un archivo en el sistema de archivos")
     @Override
     public String store(MultipartFile file) {
         try {
@@ -47,14 +46,12 @@ public final class FileSystemStorageService implements StorageInterface {
 
             // Copiar el archivo
             Files.copy(file.getInputStream(), destinationFile, StandardCopyOption.REPLACE_EXISTING);
-            log.info("Archivo guardado: " + destinationFile.toString()); // Log para verificar el archivo guardado
             return file.getOriginalFilename();
         } catch (IOException | RuntimeException e) {
-            log.error("Error al guardar el archivo: " + e.getMessage());
             throw new RuntimeException("Failed to store file. Error: " + e.getMessage());
         }
     }
-
+    @Operation(summary = "Inicializar almacenamiento", description = "Inicializa el directorio de almacenamiento si no existe")
     @Override
     @PostConstruct
     public void init() {
@@ -62,13 +59,12 @@ public final class FileSystemStorageService implements StorageInterface {
             // Crear el directorio si no existe
             if (!Files.exists(rootLocation)) {
                 Files.createDirectories(rootLocation);
-                log.info("Directorio creado: " + rootLocation.toString());
             }
         } catch (IOException e) {
             throw new RuntimeException("Could not initialize storage: " + e.getMessage());
         }
     }
-
+    @Operation(summary = "Cargar archivo", description = "Carga un archivo del sistema de archivos")
     @Override
     public Resource loadResource(String filename) {
         try {
